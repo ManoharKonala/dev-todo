@@ -1,0 +1,38 @@
+groups:
+  - name: todoflow_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP error rate detected"
+          description: "The 5xx error rate has exceeded 5% for the last 1 minute. Current value: {{ $value }}"
+
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, rate(todoflow_request_duration_seconds_bucket[5m])) > 2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow response times detected"
+          description: "The 95th percentile response time has exceeded 2 seconds for the last 2 minutes. Current value: {{ $value }}s"
+
+      - alert: LowCompletionRate
+        expr: todoflow_completion_rate < 0.1
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "Low todo completion rate"
+          description: "The todo completion rate has been below 10% for the last 5 minutes. Current value: {{ $value }}"
+
+      - alert: PodDown
+        expr: up{job=~"todoflow.*"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "TodoFlow service is down"
+          description: "The TodoFlow instance {{ $labels.instance }} has been unreachable for 30 seconds."
