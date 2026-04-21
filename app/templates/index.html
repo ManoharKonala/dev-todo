@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoFlow — Industrial DevOps Dashboard</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-surface-hover: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --border-color: #334155;
+            --radius: 12px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-surface);
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badges {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-env {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .badge-color {
+            transition: var(--transition);
+        }
+
+        .badge-color.blue {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        .badge-color.green {
+            background-color: #059669;
+            color: #ffffff;
+        }
+
+        /* Input Form */
+        .todo-form {
+            display: flex;
+            gap: 0.75rem;
+            background: var(--bg-surface);
+            padding: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        button {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Todo List */
+        .todo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-surface);
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid transparent;
+            transition: var(--transition);
+        }
+
+        .todo-item:hover {
+            background: var(--bg-surface-hover);
+        }
+
+        .todo-item.priority-high { border-left-color: var(--accent-red); }
+        .todo-item.priority-medium { border-left-color: var(--accent-yellow); }
+        .todo-item.priority-low { border-left-color: var(--accent-green); }
+
+        .todo-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 4px;
+            cursor: pointer;
+            accent-color: var(--accent-blue);
+        }
+
+        .todo-title {
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .todo-item.completed .todo-title {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .priority-tag {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-tag.high { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+        .priority-tag.medium { background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); }
+        .priority-tag.low { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+
+        .btn-delete {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 0.5rem;
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+        }
+
+        /* Chaos Panel */
+        details.chaos-panel {
+            background: var(--bg-surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--accent-yellow);
+        }
+
+        summary:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .chaos-controls {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        .btn-chaos {
+            flex: 1;
+            min-width: 140px;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .btn-chaos.slow { background-color: var(--accent-yellow); color: #000; }
+        .btn-chaos.error { background-color: var(--accent-red); }
+        .btn-chaos.reset { background-color: var(--bg-surface-hover); color: var(--text-primary); }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-surface);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-val {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: #b91c1c;
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            animation: slideIn 0.3s forwards, fadeOut 0.3s forwards 4.7s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚡ TodoFlow</h1>
+        <div class="badges">
+            <span class="badge badge-env" id="badgeEnv">{{ app_env }}</span>
+            <span class="badge badge-color {{ deploy_color }}" id="badgeColor">{{ deploy_color }}</span>
+        </div>
+    </header>
+
+    <form class="todo-form" id="todoForm" onsubmit="event.preventDefault(); addTodo();">
+        <input type="text" id="todoTitle" placeholder="What needs to be deployed or verified?" required />
+        <select id="todoPriority">
+            <option value="low">Low Priority</option>
+            <option value="medium" selected>Med Priority</option>
+            <option value="high">High Priority</option>
+        </select>
+        <button type="submit">➕ Add Task</button>
+    </form>
+
+    <div class="todo-list" id="todoList">
+        <!-- Rendered dynamically via JS -->
+    </div>
+
+    <details class="chaos-panel">
+        <summary>⚠️ Chaos Engineering Control Panel</summary>
+        <div class="chaos-controls">
+            <button class="btn-chaos slow" onclick="triggerChaos('/chaos/slow')">🐌 Enable Slow Mode</button>
+            <button class="btn-chaos error" onclick="triggerChaos('/chaos/errors')">💥 Enable Error Mode</button>
+            <button class="btn-chaos reset" onclick="triggerChaos('/chaos/reset')">🔄 Reset Chaos</button>
+        </div>
+    </details>
+
+    <div class="status-bar">
+        <div class="status-item">
+            <span>Completion:</span>
+            <span class="status-val" id="statusRate">0%</span>
+        </div>
+        <div class="status-item">
+            <span>Deploy Env:</span>
+            <span class="status-val" id="statusColor">{{ deploy_color }}</span>
+        </div>
+        <div class="status-item">
+            <span>Build No:</span>
+            <span class="status-val" id="statusBuild">{{ build_number }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    // Industrial REST error proxy
+    async function apiFetch(url, options = {}) {
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                let errorDetail = `HTTP Error ${response.status}`;
+                try {
+                    const errorJson = await response.json();
+                    if (errorJson.detail) errorDetail = errorJson.detail;
+                } catch(e){}
+                showToast(errorDetail);
+                throw new Error(errorDetail);
+            }
+            return await response.json();
+        } catch (error) {
+            if (error.message.includes("Failed to fetch")) {
+                showToast("Network Error: Could not connect to TodoFlow API.");
+            }
+            throw error;
+        }
+    }
+
+    function showToast(message) {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.innerHTML = `⚠️ ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    }
+
+    async function loadTodos() {
+        try {
+            const todos = await apiFetch('/todos');
+            renderTodos(todos);
+        } catch (e) {}
+    }
+
+    function renderTodos(todos) {
+        const container = document.getElementById("todoList");
+        container.innerHTML = "";
+        
+        if (todos.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: var(--text-secondary); padding: 2rem;">No active tasks. Good job! 🎉</div>`;
+            return;
+        }
+
+        // Sort: incomplete first, then priority (high -> low)
+        const priorityWeights = { high: 3, medium: 2, low: 1 };
+        todos.sort((a, b) => {
+            if (a.completed !== b.completed) return a.completed ? 1 : -1;
+            return priorityWeights[b.priority] - priorityWeights[a.priority];
+        });
+
+        todos.forEach(todo => {
+            const item = document.createElement("div");
+            item.className = `todo-item priority-${todo.priority} ${todo.completed ? 'completed' : ''}`;
+            item.innerHTML = `
+                <div class="todo-content">
+                    <input type="checkbox" class="checkbox" ${todo.completed ? 'checked' : ''} 
+                           onchange="toggleTodo('${todo.id}', this.checked)" />
+                    <span class="todo-title">${escapeHtml(todo.title)}</span>
+                    <span class="priority-tag ${todo.priority}">${todo.priority}</span>
+                </div>
+                <button class="btn-delete" onclick="deleteTodo('${todo.id}')" title="Delete Task">🗑️</button>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    async function addTodo() {
+        const titleInput = document.getElementById("todoTitle");
+        const prioritySelect = document.getElementById("todoPriority");
+        const title = titleInput.value.trim();
+        if (!title) return;
+
+        try {
+            await apiFetch('/todos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, priority: prioritySelect.value })
+            });
+            titleInput.value = "";
+            await loadTodos();
+            await pollHealth();
+        } catch (e) {}
+    }
+
+    async function toggleTodo(id, completed) {
+        try {
+            await apiFetch(`/todos/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed })
+            });
+            await loadTodos();
+            await pollHealth();
+        } catch (e) {
+            // Revert state visually on error
+            await loadTodos();
+        }
+    }
+
+    async function deleteTodo(id) {
+        try {
+            await apiFetch(`/todos/${id}`, { method: 'DELETE' });
+            await loadTodos();
+            await pollHealth();
+        } catch (e) {}
+    }
+
+    async function triggerChaos(endpoint) {
+        try {
+            const result = await apiFetch(endpoint);
+            let msg = "Chaos mode updated.";
+            if (endpoint.includes("slow")) msg = "🐌 Slow mode activated (2s global API delay).";
+            if (endpoint.includes("errors")) msg = "💥 Error mode activated (simulating 500 status logic).";
+            if (endpoint.includes("reset")) msg = "🔄 Chaos configurations restored to baseline stability.";
+            
+            // Show dynamic confirmation feedback
+            const toast = document.createElement("div");
+            toast.className = "toast";
+            toast.style.background = endpoint.includes("reset") ? "var(--accent-green)" : "var(--accent-yellow)";
+            toast.style.color = "#000";
+            toast.innerHTML = `🚀 ${msg}`;
+            document.getElementById("toastContainer").appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        } catch (e) {}
+    }
+
+    async function pollHealth() {
+        try {
+            const health = await apiFetch('/health');
+            const ratePct = Math.round(health.completion_rate * 100);
+            document.getElementById("statusRate").innerText = `${ratePct}%`;
+            
+            // Also refresh environment/version status
+            const versionMeta = await apiFetch('/version');
+            document.getElementById("badgeEnv").innerText = versionMeta.namespace || health.environment;
+            
+            const colorBadge = document.getElementById("badgeColor");
+            colorBadge.innerText = versionMeta.color;
+            colorBadge.className = `badge badge-color ${versionMeta.color}`;
+            
+            document.getElementById("statusColor").innerText = versionMeta.color.toUpperCase();
+            document.getElementById("statusBuild").innerText = versionMeta.build_number;
+        } catch (e) {}
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // Lifecycle triggers
+    window.addEventListener('DOMContentLoaded', () => {
+        loadTodos();
+        pollHealth();
+        // Set auto-refresh cycle interval exactly every 10 seconds
+        setInterval(() => {
+            pollHealth();
+            // Optionally silently synchronise UI list to maintain state clarity without intrusive input resets
+            loadTodos();
+        }, 10000);
+    });
+</script>
+</body>
+</html>
