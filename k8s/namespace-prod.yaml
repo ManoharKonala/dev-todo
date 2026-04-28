@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: todoflow-prod
+  labels:
+    environment: prod
+    project: todoflow
